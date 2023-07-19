@@ -14,17 +14,18 @@ defmodule CountryFinder do
   Returns a list of country structs
   """
   def all_countries() do
-    case CountryClient.all_countries() do
+
+    countries = country_client().all_countries()
+
+    case countries do
       {:ok, %Finch.Response{status: 200, body: body}} ->
         body
         |> Jason.decode!()
         |> maps_to_structs()
-
       _ ->
         :error
     end
   end
-
   defp maps_to_structs(list_of_countries) do
     Enum.map(list_of_countries, fn country_map ->
       name = get_in(country_map, ["name", "common"])
@@ -33,7 +34,6 @@ defmodule CountryFinder do
       capital = country_map["capital"]
       population = country_map["population"]
       country_alpha_code = country_map["cca3"]
-
       %Country{
         name: name,
         flag_png: flag_png,
@@ -44,10 +44,7 @@ defmodule CountryFinder do
       }
     end)
   end
-
-
-
-  @moduledoc """
+  @doc """
   Formats a number by adding commas as thousands separators.
   """
   def format_number(number) do
@@ -57,6 +54,10 @@ defmodule CountryFinder do
     |> Enum.chunk_every(3, 3, [])
     |> Enum.join(",")
     |> String.reverse
+  end
+
+  defp country_client() do
+    Application.get_env(:country_finder, :country_client_module)
   end
 
 end
